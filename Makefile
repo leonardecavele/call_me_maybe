@@ -1,16 +1,17 @@
 # helpers
+RED := \e[0;31m
 GREEN := \e[0;32m
 RESET := \e[0m
 FLAKE8_SUCCESS := printf '%b\n' "$(GREEN)Success: flake8$(RESET)"
 
 # structure
-SRC_DIRECTORIES := # to do
-DIRS := . src $(addprefix src/,$(SRC_DIRECTORIES))
+SRC_DIRECTORIES := #
+DIRS := . src llm_sdk $(addprefix src/,$(SRC_DIRECTORIES))
 ARGS ?= #
 
 PYCACHES = $(addsuffix /__pycache__,$(DIRS))
 MYPYCACHES = $(addsuffix /.mypy_cache,$(DIRS))
-EXCLUDE = --exclude .venv
+EXCLUDE = --exclude .venv llm_sdk
 
 # tools
 UV := uv
@@ -27,29 +28,29 @@ MYPY_FLAGS := \
 
 # rules
 install: is_uv
-	$(UV) sync
+	@$(UV) sync
 
 run: install
-	mkdir -p data/output
-	$(UV) run python -m src $(ARGS)
+	@$(UV) run python -m src $(ARGS)
 
 clean:
-	rm -rf $(PYCACHES) $(MYPYCACHES) .venv data/output
+	@rm -rf $(PYCACHES) $(MYPYCACHES) .venv data/output
 
 debug: install
-	$(UV) run python -m pdb -m src $(ARGS)
+	@$(UV) run python -m pdb -m src $(ARGS)
 
 lint: install
-	$(FLAKE8) && $(FLAKE8_SUCCESS)
-	$(MYPY) . $(MYPY_FLAGS)
+	@$(FLAKE8) && $(FLAKE8_SUCCESS)
+	@$(MYPY) . $(MYPY_FLAGS)
 
 lint-strict: install
-	$(FLAKE8) && $(FLAKE8_SUCCESS)
-	$(MYPY) . --strict
+	@$(FLAKE8) && $(FLAKE8_SUCCESS)
+	@$(MYPY) . --strict
 
 is_uv:
-	command -v $(UV) >/dev/null 2>&1 \
-	|| (echo "uv not found, please install it first" && exit 1)
+	@command -v $(UV) >/dev/null 2>&1 \
+	|| (printf "$(RED)uv not found, please install it first$(RESET)\n" \
+	&& exit 1)
 
 # miscellaneous
 .PHONY: install run debug lint lint-strict clean is_uv
