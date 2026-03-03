@@ -5,9 +5,8 @@ RESET := \e[0m
 FLAKE8_SUCCESS := printf '%b\n' "$(GREEN)Success: flake8$(RESET)"
 
 # structure
-SRC_DIRECTORIES := #
-DIRS := . src llm_sdk $(addprefix src/,$(SRC_DIRECTORIES))
-ARGS ?= #
+DIRS := . src llm_sdk
+ARGS ?=
 
 PYCACHES = $(addsuffix /__pycache__,$(DIRS))
 MYPYCACHES = $(addsuffix /.mypy_cache,$(DIRS))

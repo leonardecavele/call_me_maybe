@@ -8,4 +8,6 @@ dependencies = [
     "torch>=2.0.0",
     "transformers>=4.40.0",
     "huggingface-hub>=0.20.0",
+	"accelerate>=0.26.0",
+	"colorlog>=6.10.1"
 ]
