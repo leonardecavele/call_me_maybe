@@ -10,7 +10,7 @@ import colorlog
 from llm_sdk import Small_LLM_Model
 
 from .decoding import get_answers
-from .prompt import parse_prompts, augment_prompts
+from .prompt import parse_prompts, augment_prompts, get_prompt_context
 from .errors import ErrorCode, PromptError
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -129,13 +129,14 @@ def main() -> int:
     # parse and augment prompts
     try:
         pre_prompts: list[dict[str, str]] = parse_prompts(paths['input_path'])
+        context: str = get_prompt_context(paths['functions_definition_path'])
     except PromptError as e:
         logger.error(e)
         return ErrorCode.PROMPT_ERROR
 
-    prompts: list[str] = augment_prompts(pre_prompts)
+    prompts: list[str] = augment_prompts(pre_prompts, context)
     logger.info("prompts parsed and augmented")
-    logger.debug(prompts)
+    logger.debug("".join(prompts[0])) # edit with \n etc
 
     # constrained decoding
     model: Small_LLM_Model = Small_LLM_Model()
