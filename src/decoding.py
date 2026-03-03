@@ -6,7 +6,7 @@ MAX_TOKENS: int = 256
 
 
 def get_answers(model: Small_LLM_Model, prompts: list[str]) -> list[str]:
-    prompts = prompts[:1]
+    prompts = prompts[:1] # to change
 
     answers: list[str] = []
     prompts_ids: list[list[int]] = [
