@@ -136,7 +136,7 @@ def main() -> int:
 
     prompts: list[str] = augment_prompts(pre_prompts, context)
     logger.info("prompts parsed and augmented")
-    logger.debug("".join(prompts[0])) # edit with \n etc
+    logger.debug("\n".join(prompts))
 
     # constrained decoding
     model: Small_LLM_Model = Small_LLM_Model()
