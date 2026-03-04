@@ -9,25 +9,22 @@ from .errors import PromptError
 logger: logging.Logger = logging.getLogger(__name__)
 
 DIRECTIVE: str = (
-    """
-    You are a JSON generator.
-
-    Task: For each user prompt, output exactly one JSON object with these keys
-    only, in this exact order:
-    1) "prompt" (string): the original prompt unchanged
-    2) "name" (string): the function name to call
-    3) "parameters" (object): required arguments only, with correct types
-
-    Output format (STRICT):
-    - Return ONLY a JSON array of objects.
-    - The output MUST be valid JSON.
-    - The JSON MUST be minified on a single line (no newlines, no indentation).
-    - Do NOT write any extra text, explanations, or prose.
-    - Do NOT wrap the JSON in Markdown code fences.
-    - Do NOT add extra keys.
-    - Every required parameter must be present.
-    - Parameter types must match the function definitions exactly.
-    """
+    "You are a JSON generator.\n"
+    "For each user prompt, output exactly one JSON object with these keys\n"
+    "only, in this exact order:\n"
+    "2) \"prompt\" (string): the original pro\n"
+    "3) \"name\" (string): the function name to call\n"
+    "4) \"parameters\" (object): required arguments only, with correct types\n"
+    "\n"
+    "Output format (STRICT):\n"
+    "- Return ONLY a JSON array of objects.\n"
+    "- The output MUST be valid JSON.\n"
+    "- The JSON MUST be minified on a single line.\n"
+    "- Do NOT write any extra text, explanations, or prose.\n"
+    "- Do NOT wrap the JSON in Markdown code fences.\n"
+    "- Do NOT add extra keys.\n"
+    "- Every required parameter must be present.\n"
+    "- Parameter types must match the function definitions exactly.\n"
 )
 
 
@@ -53,7 +50,7 @@ def format_function(fn_desc: dict[str, Any]) -> str:
         f"NAME: \"{fn_desc['name']}\", "
         f"DESCRIPTION: \"{fn_desc['description']}\", "
         f"PARAMETERS: \"{parameters}\", "
-        f"RETURNS: \"{return_value}\"."
+        f"RETURNS: \"{return_value}\".\n"
     )
 
 
@@ -76,8 +73,11 @@ def augment_prompts(
     prompts: list[str] = []
     for p in pre_prompts:
         prompt: str = "\n".join(str(v) for v in p.values())
-        augmented_prompt: str = (
-            context + DIRECTIVE + "\nUser: " + prompt + "\nAssistant: "
-        )
+        augmented_prompt: str = "\n".join([
+            context,
+            DIRECTIVE,
+            f"User: {prompt}",
+            "Assistant: ",
+        ])
         prompts.append(augmented_prompt)
     return prompts
