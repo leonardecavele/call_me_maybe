@@ -1,8 +1,11 @@
 import logging
 import json
 
+from typing import Any
+
 from llm_sdk import Small_LLM_Model
 
+from .errors import DecodeError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -11,12 +14,19 @@ NEGATIVE_INF: float = -1e30
 
 
 def get_dict_ids(model: Small_LLM_Model) -> dict[str, int]:
-    path: str = model.get_path_to_vocab_file()
-    with open(path, "r", encoding="utf-8") as f:
-        vocab = json.load(f)
-    print("len(vocab) =", len(vocab))
-    print("max_id =", max(vocab.values()))
-    print("min_id =", min(vocab.values()))
+    #path: str = model.get_path_to_vocab_file()
+    #try:
+    #    with open(path, "r", encoding="utf-8") as f:
+    #        try:
+    #            vocab: dict[str, Any] = json.load(f)
+    #        except json.JSONDecodeError as e:
+    #            raise DecodeError(e)
+    #except OSError as e:
+    #    raise DecodeError(e)
+
+    #print("len(vocab) =", len(vocab))
+    #print("max_id =", max(vocab.values()))
+    #print("min_id =", min(vocab.values()))
     return {
         "QUOTE": model.encode("\"")[0].tolist()[0],
         "OPEN_SQB": model.encode("[")[0].tolist()[0],
@@ -63,13 +73,14 @@ def constraint(
 def greedy_constrained_id(
     logits: list[float], id_pool: list[int], id_ban: list[int]
 ) -> int:
+    filtered: list[float] = []
     if id_pool:
-        filtered: list[float] = [NEGATIVE_INF] * len(logits)
+        filtered = [NEGATIVE_INF] * len(logits)
         for token_id in id_pool:
             if 0 <= token_id < len(logits) and token_id not in id_ban:
                 filtered[token_id] = logits[token_id]
     else:
-        filtered: list[float] = logits[:]
+        filtered = logits[:]
         for token_id in id_ban:
             if 0 <= token_id < len(filtered):
                 filtered[token_id] = NEGATIVE_INF
@@ -77,18 +88,24 @@ def greedy_constrained_id(
     return max(range(len(filtered)), key=filtered.__getitem__)
 
 
-def get_answers(model: Small_LLM_Model, prompts: list[str]) -> list[str]:
+def get_answers(
+    model: Small_LLM_Model, augmented_prompts: list[str], prompts: list[str]
+) -> list[str]:
     ids: dict[str, int] = get_dict_ids(model)
 
     answers: list[str] = []
     prompts_ids: list[list[int]] = [
-        model.encode(p)[0].tolist() for p in prompts
+        model.encode(p)[0].tolist() for p in augmented_prompts
     ]
 
     for prompt_i, prompt_ids in enumerate(prompts_ids):
         i: int = 0
-        if prompt_i > 0:
-            i = 1
+
+        pattern: list[int] = model.encode(
+            f"[{{\"prompt\":\"{prompts[prompt_i]}\","
+            f"\"name\":\"<tool_call>\","
+            f"\"parameters\":\"<tool_call>\"}}]"
+        )[0].tolist()
 
         in_string: bool = False
         input_ids: list[int] = prompt_ids[:]

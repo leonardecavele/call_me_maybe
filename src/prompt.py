@@ -8,27 +8,8 @@ from .errors import PromptError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-DIRECTIVE: str = (
-    "You are a JSON generator.\n"
-    "For each user prompt, output exactly one JSON object with these keys\n"
-    "only, in this exact order:\n"
-    "2) \"prompt\" (string): the original pro\n"
-    "3) \"name\" (string): the function name to call\n"
-    "4) \"parameters\" (object): required arguments only, with correct types\n"
-    "\n"
-    "Output format (STRICT):\n"
-    "- Return ONLY a JSON array of objects.\n"
-    "- The output MUST be valid JSON.\n"
-    "- The JSON MUST be minified on a single line.\n"
-    "- Do NOT write any extra text, explanations, or prose.\n"
-    "- Do NOT wrap the JSON in Markdown code fences.\n"
-    "- Do NOT add extra keys.\n"
-    "- Every required parameter must be present.\n"
-    "- Parameter types must match the function definitions exactly.\n"
-)
 
-
-def parse_prompts(input_path: Path) -> list[dict[str, str]]:
+def parse_prompts(input_path: Path) -> list[str]:
     try:
         with input_path.open("r", encoding="utf-8") as f:
             try:
@@ -37,20 +18,13 @@ def parse_prompts(input_path: Path) -> list[dict[str, str]]:
                 raise PromptError(e)
     except OSError as e:
         raise PromptError(e)
-    return data
+
+    return [" ".join(d.values()) for d in data]
 
 
 def format_function(fn_desc: dict[str, Any]) -> str:
-    parameters: str = ", ".join(
-        f"\'{param_name}\' ({param_info.get('type', 'unknown')})"
-        for param_name, param_info in fn_desc.get('parameters', {}).items()
-    )
-    return_value: str = fn_desc.get("returns", {}).get("type", "unknown")
     return (
-        f"NAME: \"{fn_desc['name']}\", "
-        f"DESCRIPTION: \"{fn_desc['description']}\", "
-        f"PARAMETERS: \"{parameters}\", "
-        f"RETURNS: \"{return_value}\".\n"
+        f"NAME: \"{fn_desc['name']}\"."
     )
 
 
@@ -67,17 +41,14 @@ def get_prompt_context(functions_definition_path: Path) -> str:
 
 
 def augment_prompts(
-    pre_prompts: list[dict[str, str]],
+    prompts: list[str],
     context: str
 ) -> list[str]:
-    prompts: list[str] = []
-    for p in pre_prompts:
-        prompt: str = "\n".join(str(v) for v in p.values())
+    augmented_prompts: list[str] = []
+    for p in prompts:
         augmented_prompt: str = "\n".join([
             context,
-            DIRECTIVE,
-            f"User: {prompt}",
-            "Assistant: ",
+            f"User: {p}",
         ])
-        prompts.append(augmented_prompt)
-    return prompts
+        augmented_prompts.append(augmented_prompt)
+    return augmented_prompts
