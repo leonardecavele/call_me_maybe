@@ -1,4 +1,5 @@
 import sys
+import json
 import logging
 import argparse
 
@@ -10,8 +11,8 @@ import colorlog
 from llm_sdk import Small_LLM_Model
 
 from .decoding import get_answers
-from .prompt import parse_prompts, augment_prompts, get_prompt_context
-from .errors import DecodeError, ErrorCode, PromptError
+from .prompt import parse_prompts, augment_prompts
+from .errors import DecodeError, ErrorCode, PromptError, ParseError
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -88,10 +89,30 @@ def parse_args() -> dict[str, Path]:
     return {
         'lib_log_level': args.lib_log_level,
         'log_level': args.log_level,
-        'functions_definition_path': functions_definition_path,
-        'input_path': input_path,
-        'output_path': output_path
+        'functions': functions_definition_path,
+        'input': input_path,
+        'output': output_path
     }
+
+
+def get_functions_definition(functions: Path) -> list[dict[str, Any]]:
+    try:
+        with functions.open("r", encoding="utf-8") as f:
+            try:
+                data: Any = json.load(f)
+            except json.JSONDecodeError as e:
+                raise ParseError(e) from e
+
+        if not isinstance(data, list) or not all(
+            isinstance(x, dict) for x in data
+        ):
+            raise ParseError(
+                "functions_definition.json must be a JSON array of objects"
+            )
+
+        return data
+    except OSError as e:
+        raise PromptError(e) from e
 
 
 def main() -> int:
@@ -128,27 +149,32 @@ def main() -> int:
 
     # parse and augment prompts
     try:
-        prompts: list[str] = parse_prompts(paths['input_path'])
-        context: str = get_prompt_context(paths['functions_definition_path'])
+        functions: list[dict[str, Any]] = get_functions_definition(
+            paths['functions']
+        )
+        prompts: list[str] = parse_prompts(paths['input'])
     except PromptError as e:
         logger.error(e)
         return ErrorCode.PROMPT_ERROR
+    except ParseError as e:
+        logger.error(e)
+        return ErrorCode.PARSE_ERROR
 
-    augmented_prompts: list[str] = augment_prompts(prompts, context)
+    augmented_prompts: list[str] = augment_prompts(prompts, functions)
     logger.info("prompts parsed and augmented")
     logger.debug("\n".join(augmented_prompts))
 
     # constrained decoding
     model: Small_LLM_Model = Small_LLM_Model()
     try:
-        answers: list[str] = get_answers(model, augmented_prompts, prompts)
+        answers: str = get_answers(
+            model, augmented_prompts, prompts, functions
+        )
     except DecodeError as e:
         logger.error(e)
         return ErrorCode.DECODE_ERROR
     logger.info("got answers from llm")
-    logger.debug(
-        "\n".join(f"answer{i}: {a}" for i, a in enumerate(answers, start=1))
-    )
+    logger.debug(answers)
 
     # export
 

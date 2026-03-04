@@ -28,27 +28,22 @@ def format_function(fn_desc: dict[str, Any]) -> str:
     )
 
 
-def get_prompt_context(functions_definition_path: Path) -> str:
+def get_prompt_context(functions: list[dict[str, Any]]) -> str:
     try:
-        with functions_definition_path.open("r", encoding="utf-8") as f:
-            try:
-                data: list[dict[str, Any]] = json.load(f)
-            except json.JSONDecodeError as e:
-                raise PromptError(e)
-        return "\n".join(format_function(fn) for fn in data)
-    except OSError as e:
+        if not all(isinstance(fn, dict) for fn in functions):
+            raise PromptError("Expected list[dict] for function definitions")
+        return "\n".join(format_function(fn) for fn in functions)
+    except Exception as e:
         raise PromptError(e)
 
 
 def augment_prompts(
     prompts: list[str],
-    context: str
+    functions: list[dict[str, Any]]
 ) -> list[str]:
+    context: str = get_prompt_context(functions)
     augmented_prompts: list[str] = []
     for p in prompts:
-        augmented_prompt: str = "\n".join([
-            context,
-            f"User: {p}",
-        ])
+        augmented_prompt: str = "\n".join([context, f"User: {p}"])
         augmented_prompts.append(augmented_prompt)
     return augmented_prompts

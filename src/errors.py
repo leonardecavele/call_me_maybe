@@ -6,6 +6,7 @@ class ErrorCode(IntEnum):
     ARGS_ERROR = auto()
     PROMPT_ERROR = auto()
     DECODE_ERROR = auto()
+    PARSE_ERROR = auto()
 
 
 class PromptError(Exception):
@@ -13,4 +14,8 @@ class PromptError(Exception):
 
 
 class DecodeError(Exception):
+    pass
+
+
+class ParseError(Exception):
     pass
