@@ -6,7 +6,7 @@ from pydantic import (
 )
 
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from .errors import ParseError
 from .typing import JsonData
@@ -159,7 +159,7 @@ class JsonParsingHandler:
             if not data:
                 raise ParseError("functions json must not be empty")
 
-            return data
+            return cast(JsonData, data)
 
         except (OSError, json.JSONDecodeError, AttributeError, TypeError) as e:
             raise ParseError(e)
