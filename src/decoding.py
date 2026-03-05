@@ -58,14 +58,14 @@ def generate_parameters(
     for token_id in pattern:
         if token_id == TOOL_CALL:
             next_str: str = ""
-            while "\"" not in next_str:
+            while True:
                 logits: list[float] = model.get_logits_from_input_ids(
                     prompt_ids
                 )
                 next_id: int = max(range(len(logits)), key=logits.__getitem__)
-                next_str: str = model.decode([next_id])
+                next_str = model.decode([next_id])
 
-                if "}" in next_str:
+                if "}" in next_str or "\"" in next_str:
                     break
 
                 logger.debug(
