@@ -18,19 +18,24 @@ class Step(IntEnum):
 
 
 def generate_function_name(
-    model: Small_LLM_Model, prompt_ids: list[int]
+    model: Small_LLM_Model, prompt_ids: list[int], fn_first_ids: list[int]
 ) -> list[int]:
     function_name_ids: list[int] = []
 
-    next_id: int = model.encode("fn_")[0].tolist()[0]
-    next_token: str = ""
+    logits: list[float] = model.get_logits_from_input_ids(prompt_ids)
+    for token_id in range(len(logits)):
+        if token_id not in fn_first_ids:
+            logits[token_id] = float("-inf")
+
+    next_id: int = max(range(len(logits)), key=logits.__getitem__)
+    next_token: str = model.decode([next_id])
 
     while "\"" not in next_token:
         function_name_ids.append(next_id)
         prompt_ids.append(next_id)
         logger.debug("next_id=%d piece=%r", next_id, next_token)
 
-        logits: list[float] = model.get_logits_from_input_ids(prompt_ids)
+        logits = model.get_logits_from_input_ids(prompt_ids)
         next_id = max(range(len(logits)), key=logits.__getitem__)
         next_token = model.decode([next_id])
 
@@ -120,6 +125,11 @@ def get_answers(
         model.encode(p)[0].tolist() for p in augmented_prompts
     ]
 
+    function_names: list[str] = [fn.get("name", "") for fn in functions]
+    fn_first_ids: list[int] = [
+        model.encode(name)[0].tolist()[0] for name in function_names if name
+    ]
+
     for prompt_i, _ in enumerate(prompts_ids):
 
         try:
@@ -142,7 +152,7 @@ def get_answers(
                 if step == Step.FUNCTION_NAME:
                     logger.info("generating function name")
                     new_ids += generate_function_name(
-                        model, prompts_ids[prompt_i]
+                        model, prompts_ids[prompt_i], fn_first_ids
                     )
                     step += 1
                 elif step == Step.PARAMETERS:
