@@ -8,42 +8,41 @@ from .errors import ParseError
 from .typing import JsonData
 
 
-ARGUMENTS: list[dict[str, Any]] = [
-    {
-        "name_or_flags": "--functions_definition",
-        "default": "data/input/functions_definition.json",
-        "help": "path to the function definitions JSON file"
-    },
-    {
-        "name_or_flags": "--input",
-        "default": "data/input/function_calling_tests.json",
-        "help": "path to the input JSON file"
-    },
-    {
-        "name_or_flags": "--output",
-        "default": "data/output/function_calling_results.json",
-        "help": "path to the output JSON file"
-    },
-    {
-        "name_or_flags": "--log-level",
-        "default": "ERROR",
-        "choices": ("INFO", "DEBUG", "ERROR"),
-        "help": "logging level"
-    },
-    {
-        "name_or_flags": "--lib-log-level",
-        "default": "WARNING",
-        "choices": ("CRITICAL", "ERROR", "INFO", "DEBUG", "WARNING"),
-        "help": "libraries logging level"
-    },
+ARGUMENTS: list[tuple[tuple[str, ...], dict[str, Any]]] = [
+    (
+        ("--functions_definition",),
+        {"default": "data/input/functions_definition.json",
+         "help": "path to the function definitions JSON file"}
+    ),
+    (
+        ("--input",),
+        {"default": "data/input/function_calling_tests.json",
+         "help": "path to the input JSON file"}
+    ),
+    (
+        ("--output",),
+        {"default": "data/output/function_calling_results.json",
+         "help": "path to the output JSON file"}
+    ),
+    (
+        ("--log-level",),
+        {"default": "ERROR", "choices": ("INFO", "DEBUG", "ERROR"),
+         "help": "logging level"}
+    ),
+    (
+        ("--lib-log-level",),
+        {"default": "WARNING",
+         "choices": ("CRITICAL", "ERROR", "INFO", "DEBUG", "WARNING"),
+         "help": "libraries logging level"}
+    ),
 ]
 
 
 def parse_args() -> dict[str, Any]:
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
 
-    for argument in ARGUMENTS:
-        parser.add_argument(**argument)
+    for flags, kwargs in ARGUMENTS:
+        parser.add_argument(*flags, **kwargs)
 
     args: argparse.Namespace = parser.parse_args()
 
