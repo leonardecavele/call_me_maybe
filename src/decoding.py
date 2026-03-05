@@ -129,7 +129,8 @@ def get_answers(
                 )
                 answer_ids.append(token_id)
                 prompts_ids[prompt_i].append(token_id)
-        answer_ids.append(model.encode(",")[0].tolist()[0])
+        if prompt_i < len(prompts_ids) - 1:
+            answer_ids.append(model.encode(",")[0].tolist()[0])
 
     answer_ids.append(model.encode("]")[0].tolist()[0])
     return model.decode(answer_ids)
