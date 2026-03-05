@@ -1,7 +1,7 @@
 import json
 import argparse
 
-import pydantic
+from pydantic import BaseModel
 
 from pathlib import Path
 from typing import Any
@@ -47,13 +47,9 @@ def parse_args() -> dict[str, Any]:
     output_path: Path = Path(args.output)
 
     if not fn_def_path.is_file():
-        raise FileNotFoundError(
-            f"Missing functions definition file: {fn_def_path}"
-        )
+        raise FileNotFoundError(f"not found functions file: {fn_def_path}")
     if not input_path.is_file():
-        raise FileNotFoundError(
-            f"Missing input file: {input_path}"
-        )
+        raise FileNotFoundError(f"not found input file: {input_path}")
 
     return {
         'log_level': args.log_level,
