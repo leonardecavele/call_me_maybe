@@ -55,9 +55,7 @@ def generate_parameters(
     if not fn:
         raise DecodeError(f"unknown function: {fn_name_str}")
 
-    parameters: dict[str, dict[str, str]] = fn.get("parameters", {})
-    if not parameters:
-        return []
+    parameters: dict[str, dict[str, str]] = fn["parameters"]
 
     pattern: list[int] = model.encode(",".join(
         (
@@ -113,19 +111,14 @@ def get_answers(
         model.encode(p)[0].tolist() for p in augmented_prompts
     ]
 
-    fn_names: list[str] = [fn.get("name", "") for fn in fns]
+    fn_names: list[str] = [fn["name"] for fn in fns]
     fn_first_ids: list[int] = [
         model.encode(name)[0].tolist()[0] for name in fn_names if name
     ]
 
     for i, _ in enumerate(prompts_ids):
 
-        try:
-            prompt_json: str = json.dumps(
-                prompts[i], ensure_ascii=False
-            )
-        except (TypeError, ValueError, RecursionError):
-            raise DecodeError("cannot dump prompt")
+        prompt_json: str = json.dumps(prompts[i], ensure_ascii=False)
 
         pattern: list[int] = model.encode(
             f"{{\"prompt\":{prompt_json},"
