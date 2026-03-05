@@ -19,7 +19,7 @@ from .errors import (
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def set_up_handler() -> logging.StreamHandler[TextIO]:
+def set_up_handler() -> "logging.StreamHandler[TextIO]":
     handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
     handler.setFormatter(
         colorlog.ColoredFormatter(
