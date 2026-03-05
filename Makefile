@@ -8,14 +8,13 @@ FLAKE8_SUCCESS := printf '%b\n' "$(GREEN)Success: flake8$(RESET)"
 DIRS := . src llm_sdk
 ARGS ?=
 
-PYCACHES = $(addsuffix /__pycache__,$(DIRS))
-MYPYCACHES = $(addsuffix /.mypy_cache,$(DIRS))
-EXCLUDE = --exclude .venv llm_sdk
+PYCACHES := $(addsuffix /__pycache__,$(DIRS))
+MYPYCACHES := $(addsuffix /.mypy_cache,$(DIRS))
 
 # tools
 UV := uv
-FLAKE8 := $(UV) run flake8 $(EXCLUDE)
-MYPY := $(UV) run mypy $(EXCLUDE)
+FLAKE8 := $(UV) run flake8 --exclude=.venv,llm_sdk,__pycache__,.mypy_cache
+MYPY := $(UV) run mypy --exclude '(.*cache.*)' --follow-imports=skip
 
 # flags
 MYPY_FLAGS := \
@@ -40,11 +39,11 @@ debug: install
 
 lint: install
 	@$(FLAKE8) && $(FLAKE8_SUCCESS)
-	@$(MYPY) . $(MYPY_FLAGS)
+	@$(MYPY) src $(MYPY_FLAGS)
 
 lint-strict: install
 	@$(FLAKE8) && $(FLAKE8_SUCCESS)
-	@$(MYPY) . --strict
+	@$(MYPY) src --strict
 
 is_uv:
 	@command -v $(UV) >/dev/null 2>&1 \
