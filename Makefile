@@ -1,8 +1,11 @@
 # helpers
-RED := \e[0;31m
-GREEN := \e[0;32m
-RESET := \e[0m
-FLAKE8_SUCCESS := printf '%b\n' "$(GREEN)Success: flake8$(RESET)"
+ESC := \033
+RED := $(ESC)[31m
+GREEN := $(ESC)[32m
+BOLD := $(ESC)[1m
+RESET := $(ESC)[0m
+
+FLAKE8_SUCCESS := printf '%b\n' "$(BOLD)$(GREEN)Success: flake8$(RESET)"
 
 # structure
 DIRS := . src llm_sdk
