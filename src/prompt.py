@@ -2,7 +2,6 @@ import logging
 
 from typing import Any
 
-from .errors import PromptError
 from .typing import JsonData
 
 logger: logging.Logger = logging.getLogger(__name__)
@@ -16,12 +15,7 @@ def format_fn(fn_desc: dict[str, Any]) -> str:
 
 
 def get_prompt_context(fns: JsonData) -> str:
-    try:
-        if not all(isinstance(fn, dict) for fn in fns):
-            raise PromptError("Expected list[dict] for function definitions")
-        return "\n".join(format_fn(fn) for fn in fns)
-    except Exception as e:
-        raise PromptError(e)
+    return "\n".join(format_fn(fn) for fn in fns)
 
 
 def augment_prompts(prompts: list[str], fns: JsonData) -> list[str]:

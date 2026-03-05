@@ -71,9 +71,9 @@ def main() -> int:
 
     try:
         prompts: list[str] = parser.parse_prompts(paths['input'])
-    except PromptError as e:
+    except ParseError as e:
         logger.error(e)
-        return ErrorCode.PROMPT_ERROR
+        return ErrorCode.PARSE_ERROR
 
     augmented_prompts: list[str] = augment_prompts(prompts, fn_data)
     logger.info("prompts parsed and augmented")
