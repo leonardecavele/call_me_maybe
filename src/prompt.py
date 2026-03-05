@@ -9,6 +9,9 @@ from .errors import PromptError
 logger: logging.Logger = logging.getLogger(__name__)
 
 
+DIRECTIVE: str = "Pick the appropriate function:"
+
+
 def parse_prompts(input_path: Path) -> list[str]:
     try:
         with input_path.open("r", encoding="utf-8") as f:
@@ -44,6 +47,6 @@ def augment_prompts(
     context: str = get_prompt_context(functions)
     augmented_prompts: list[str] = []
     for p in prompts:
-        augmented_prompt: str = "\n".join([context, f"User: {p}"])
+        augmented_prompt: str = "\n".join([DIRECTIVE, context, f"User: {p}"])
         augmented_prompts.append(augmented_prompt)
     return augmented_prompts

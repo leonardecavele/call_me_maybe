@@ -1,4 +1,5 @@
 import logging
+import json
 import re
 
 from enum import IntEnum, auto
@@ -99,8 +100,10 @@ def get_answers(
 
     for prompt_i, _ in enumerate(prompts_ids):
 
+        # TODO ERROR MAYBE ?
+        prompt_json: str = json.dumps(prompts[prompt_i], ensure_ascii=False)
         pattern: list[int] = model.encode(
-            f"{{\"prompt\":\"{prompts[prompt_i]}\","
+            f"{{\"prompt\":{prompt_json},"
             f"\"name\":\"<tool_call>\","
             f"\"parameters\":{{<tool_call>}}}}"
         )[0].tolist()
