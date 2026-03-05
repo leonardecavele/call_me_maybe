@@ -28,13 +28,7 @@ ARGUMENTS: list[tuple[tuple[str, ...], dict[str, Any]]] = [
         ("--log-level",),
         {"default": "ERROR", "choices": ("INFO", "DEBUG", "ERROR"),
          "help": "logging level"}
-    ),
-    (
-        ("--lib-log-level",),
-        {"default": "WARNING",
-         "choices": ("CRITICAL", "ERROR", "INFO", "DEBUG", "WARNING"),
-         "help": "libraries logging level"}
-    ),
+    )
 ]
 
 
@@ -60,7 +54,6 @@ def parse_args() -> dict[str, Any]:
         )
 
     return {
-        'lib_log_level': args.lib_log_level,
         'log_level': args.log_level,
         'fn_def': fn_def_path,
         'input': input_path,

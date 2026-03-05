@@ -47,14 +47,12 @@ def main() -> int:
             return ErrorCode.NO_ERROR
         return ErrorCode.ARGS_ERROR
 
-    logging.getLogger().setLevel(level=getattr(logging, args["lib_log_level"]))
+    logging.getLogger().setLevel(level=getattr(logging, args["log_level"]))
     logging.basicConfig(
-        level=getattr(logging, args["lib_log_level"]),
+        level=getattr(logging, args["log_level"]),
         handlers=[set_up_handler()],
         force=True
     )
-
-    logger.setLevel(level=getattr(logging, args["log_level"]))
 
     paths: dict[str, Path] = {
         k: a for k, a in args.items() if isinstance(a, Path)
