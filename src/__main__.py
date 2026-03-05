@@ -12,7 +12,9 @@ from llm_sdk import Small_LLM_Model
 
 from .decoding import get_answers
 from .prompt import parse_prompts, augment_prompts
-from .errors import DecodeError, ErrorCode, PromptError, ParseError
+from .errors import (
+    DecodeError, ErrorCode, PromptError, ParseError
+)
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -177,6 +179,17 @@ def main() -> int:
     logger.debug(answers)
 
     # export
+    try:
+        formatted: Any = json.loads(answers)
+    except json.JSONDecodeError as e:
+        logger.error(e)
+        return ErrorCode.DECODE_ERROR
+    try:
+        with open(paths['output'], "w", encoding="utf-8") as f:
+            json.dump(formatted, f, ensure_ascii=False, indent=2)
+    except OSError as e:
+        logger.error(e)
+        return ErrorCode.EXPORT_ERROR
 
     return ErrorCode.NO_ERROR
 

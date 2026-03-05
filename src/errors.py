@@ -7,6 +7,7 @@ class ErrorCode(IntEnum):
     PROMPT_ERROR = auto()
     DECODE_ERROR = auto()
     PARSE_ERROR = auto()
+    EXPORT_ERROR = auto()
 
 
 class PromptError(Exception):
