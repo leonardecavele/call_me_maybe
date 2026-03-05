@@ -12,7 +12,7 @@ from llm_sdk import Small_LLM_Model
 from .decoding import get_answers
 from .prompt import augment_prompts
 from .parsing import parse_args, JsonParsingHandler
-from .errors import ErrorCode, DecodeError, PromptError, ParseError
+from .errors import ErrorCode, DecodeError, ParseError
 from .typing import JsonData
 
 logger: logging.Logger = logging.getLogger(__name__)
