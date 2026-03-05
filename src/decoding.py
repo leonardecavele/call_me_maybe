@@ -53,7 +53,12 @@ def generate_parameters(
     )
     parameters: dict[str, dict[str, str]] = fn.get("parameters", {})
     pattern: list[int] = model.encode(",".join(
-        [f"\"{k}\":\"<tool_call>\"" for k in parameters.keys()]
+        (
+            f"\"{k}\":<tool_call>"
+            if parameters[k].get("type") == "number"
+            else f"\"{k}\":\"<tool_call>\""
+        )
+        for k in parameters.keys()
     ))[0].tolist()
 
     for token_id in pattern:
