@@ -57,8 +57,8 @@ def parse_args() -> dict[str, Path]:
     )
     parser.add_argument(
         "--log-level",
-        default="INFO",
-        choices=("INFO", "DEBUG"),
+        default="ERROR",
+        choices=("INFO", "DEBUG", "ERROR"),
         help="logging level"
     )
     parser.add_argument(
@@ -121,8 +121,11 @@ def main() -> int:
     # parse and treat arguments
     try:
         args: dict[str, Any] = parse_args()
-    except (OSError, SystemExit) as e:
-        logger.error(e)
+    except OSError:
+        return ErrorCode.ARGS_ERROR
+    except SystemExit as e:
+        if e.code == 0 or e.code is None:
+            return ErrorCode.NO_ERROR
         return ErrorCode.ARGS_ERROR
 
     logging.basicConfig(
@@ -190,6 +193,7 @@ def main() -> int:
     except OSError as e:
         logger.error(e)
         return ErrorCode.EXPORT_ERROR
+    logger.info(f"json exported to {paths['output']}")
 
     return ErrorCode.NO_ERROR
 
