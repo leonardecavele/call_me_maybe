@@ -1,6 +1,8 @@
 import json
 import argparse
 
+import pydantic
+
 from pathlib import Path
 from typing import Any
 
