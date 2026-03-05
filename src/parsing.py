@@ -77,10 +77,12 @@ class JsonParsingHandler:
     def parse_prompts(self, input_path: Path) -> list[str]:
         try:
             with input_path.open("r", encoding="utf-8") as f:
-                data: Any = json.load(f)
+                raw: str = f.read()
 
-            if not isinstance(data, list):
-                raise ParseError("prompt json must be a list")
+                if not raw.strip():
+                    raise ParseError(f"empty json file: {input_path}")
+
+                data: Any = json.loads(raw)
 
             for d in data:
                 if not isinstance(d, dict):
@@ -90,10 +92,13 @@ class JsonParsingHandler:
                 except ValidationError as e:
                     raise ParseError(e.errors()[0]["msg"])
 
+            if not data:
+                raise ParseError("prompt json must not be empty")
+
+            return [" ".join(d.values()) for d in data]
+
         except (OSError, json.JSONDecodeError, AttributeError, TypeError) as e:
             raise ParseError(e)
-
-        return [" ".join(d.values()) for d in data]
 
     class ValidateFn(BaseModel):
         class ValidateParam(BaseModel):
@@ -125,8 +130,6 @@ class JsonParsingHandler:
         def validate_parameters(cls, value: Any) -> Any:
             if not isinstance(value, dict):
                 raise TypeError("parameters must be an object")
-            if len(value) == 0:
-                raise ValueError("parameters must not be empty")
 
             for key, spec in value.items():
                 if not isinstance(key, str) or not key.strip():
@@ -138,10 +141,12 @@ class JsonParsingHandler:
     def parse_fn_def(self, fns_path: Path) -> JsonData:
         try:
             with fns_path.open("r", encoding="utf-8") as f:
-                data: Any = json.load(f)
+                raw: str = f.read()
 
-            if not isinstance(data, list):
-                raise ParseError("functions json must be a list")
+                if not raw.strip():
+                    raise ParseError(f"empty json file: {fns_path}")
+
+                data: Any = json.loads(raw)
 
             for d in data:
                 if not isinstance(d, dict):
@@ -150,6 +155,9 @@ class JsonParsingHandler:
                     self.ValidateFn(**d)
                 except ValidationError as e:
                     raise ParseError(e.errors()[0]["msg"])
+
+            if not data:
+                raise ParseError("functions json must not be empty")
 
             return data
 
