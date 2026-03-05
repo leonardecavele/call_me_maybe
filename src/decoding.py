@@ -1,6 +1,5 @@
 import logging
 import json
-import re
 
 from enum import IntEnum, auto
 from typing import Any
@@ -19,11 +18,11 @@ class Step(IntEnum):
 
 
 def generate_fn_name(
-    model: Small_LLM_Model, prompt_ids: list[int], fn_first_ids: list[int]
+    model: Small_LLM_Model, ids: list[int], fn_first_ids: list[int]
 ) -> list[int]:
     fn_name_ids: list[int] = []
 
-    logits: list[float] = model.get_logits_from_input_ids(prompt_ids)
+    logits: list[float] = model.get_logits_from_input_ids(ids)
     for token_id in range(len(logits)):
         if token_id not in fn_first_ids:
             logits[token_id] = float("-inf")
@@ -33,10 +32,10 @@ def generate_fn_name(
 
     while "\"" not in next_token:
         fn_name_ids.append(next_id)
-        prompt_ids.append(next_id)
+        ids.append(next_id)
         logger.debug("next_id=%d piece=%r", next_id, next_token)
 
-        logits = model.get_logits_from_input_ids(prompt_ids)
+        logits = model.get_logits_from_input_ids(ids)
         next_id = max(range(len(logits)), key=logits.__getitem__)
         next_token = model.decode([next_id])
 
@@ -44,25 +43,17 @@ def generate_fn_name(
 
 
 def generate_parameters(
-    model: Small_LLM_Model, prompt_ids: list[int],
+    model: Small_LLM_Model, ids: list[int], fn_name_ids: list[int],
     fns: JsonData, TOOL_CALL: int
 ) -> list[int]:
     parameters_ids: list[int] = []
 
-    try:
-        fn_name: str = re.findall(
-            r'"name":"([^"]+)"', model.decode(prompt_ids)
-        )[-1]
-        if not fn_name:
-            raise DecodeError("empty function name")
-    except IndexError:
-        raise DecodeError("could not extract function name")
-
+    fn_name_str: str = model.decode(fn_name_ids)
     fn: dict[str, Any] = next(
-        (f for f in fns if f.get("name") == fn_name), {}
+        (f for f in fns if f.get("name") == fn_name_str), {}
     )
     if not fn:
-        raise DecodeError(f"unknown function: {fn_name}")
+        raise DecodeError(f"unknown function: {fn_name_str}")
 
     parameters: dict[str, dict[str, str]] = fn.get("parameters", {})
     if not parameters:
@@ -82,9 +73,7 @@ def generate_parameters(
             first: bool = True
             next_str: str = ""
             while True:
-                logits: list[float] = model.get_logits_from_input_ids(
-                    prompt_ids
-                )
+                logits: list[float] = model.get_logits_from_input_ids(ids)
                 if first:
                     first = False
                     for token_id in range(len(logits)):
@@ -97,18 +86,16 @@ def generate_parameters(
                 if "}" in next_str or "\"" in next_str:
                     break
 
-                logger.debug(
-                    "token_id=%d piece=%r", next_id, next_str
-                )
+                logger.debug("token_id=%d piece=%r", next_id, next_str)
                 parameters_ids.append(next_id)
-                prompt_ids.append(next_id)
+                ids.append(next_id)
         else:
             logger.debug(
                 "token_id=%d piece=%r",
                 token_id, model.decode([token_id])
             )
             parameters_ids.append(token_id)
-            prompt_ids.append(token_id)
+            ids.append(token_id)
 
     return parameters_ids
 
@@ -131,11 +118,11 @@ def get_answers(
         model.encode(name)[0].tolist()[0] for name in fn_names if name
     ]
 
-    for prompt_i, _ in enumerate(prompts_ids):
+    for i, _ in enumerate(prompts_ids):
 
         try:
             prompt_json: str = json.dumps(
-                prompts[prompt_i], ensure_ascii=False
+                prompts[i], ensure_ascii=False
             )
         except (TypeError, ValueError, RecursionError):
             raise DecodeError("cannot dump prompt")
@@ -146,20 +133,23 @@ def get_answers(
             f"\"parameters\":{{<tool_call>}}}}"
         )[0].tolist()
 
+        fn_name_ids: list[int] = []
+
         step: int = 0
         for token_id in pattern:
             if token_id == TOOL_CALL:
                 new_ids: list[int] = []
                 if step == Step.FUNCTION_NAME:
                     logger.info("generating function name")
-                    new_ids += generate_fn_name(
-                        model, prompts_ids[prompt_i], fn_first_ids
+                    fn_name_ids = generate_fn_name(
+                        model, prompts_ids[i], fn_first_ids
                     )
+                    new_ids += fn_name_ids
                     step += 1
                 elif step == Step.PARAMETERS:
                     logger.info("generating parameters")
                     new_ids += generate_parameters(
-                        model, prompts_ids[prompt_i], fns, TOOL_CALL
+                        model, prompts_ids[i], fn_name_ids, fns, TOOL_CALL
                     )
                     step += 1
                 answer_ids += new_ids
@@ -169,8 +159,8 @@ def get_answers(
                     token_id, model.decode([token_id])
                 )
                 answer_ids.append(token_id)
-                prompts_ids[prompt_i].append(token_id)
-        if prompt_i < len(prompts_ids) - 1:
+                prompts_ids[i].append(token_id)
+        if i < len(prompts_ids) - 1:
             answer_ids.append(model.encode(",")[0].tolist()[0])
 
     answer_ids.append(model.encode("]")[0].tolist()[0])
