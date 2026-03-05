@@ -7,6 +7,8 @@ from typing import Any
 
 from llm_sdk import Small_LLM_Model
 
+from .errors import DecodeError
+
 logger: logging.Logger = logging.getLogger(__name__)
 
 
@@ -41,14 +43,22 @@ def generate_parameters(
 ) -> list[int]:
     parameters_ids: list[int] = []
 
-    # TODO PROTECT TYPE HINT ALL
     function_name: str = re.findall(
         r'"name":"([^"]+)"', model.decode(prompt_ids)
     )[-1]
+    if not function_name:
+        raise DecodeError("could not extract function name")
+
     fn: dict[str, Any] = next(
         (f for f in functions if f.get("name") == function_name), {}
     )
+    if not fn:
+        raise DecodeError(f"unknown function: {function_name}")
+
     parameters: dict[str, dict[str, str]] = fn.get("parameters", {})
+    if not parameters:
+        return []
+
     pattern: list[int] = model.encode(",".join(
         (
             f"\"{k}\":<tool_call>"
@@ -109,8 +119,13 @@ def get_answers(
 
     for prompt_i, _ in enumerate(prompts_ids):
 
-        # TODO ERROR MAYBE ?
-        prompt_json: str = json.dumps(prompts[prompt_i], ensure_ascii=False)
+        try:
+            prompt_json: str = json.dumps(
+                prompts[prompt_i], ensure_ascii=False
+            )
+        except (TypeError, ValueError, RecursionError):
+            raise DecodeError("cannot dump prompt")
+
         pattern: list[int] = model.encode(
             f"{{\"prompt\":{prompt_json},"
             f"\"name\":\"<tool_call>\","

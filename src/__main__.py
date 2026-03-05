@@ -121,7 +121,7 @@ def main() -> int:
     # parse and treat arguments
     try:
         args: dict[str, Any] = parse_args()
-    except OSError as e:
+    except (OSError, SystemExit) as e:
         logger.error(e)
         return ErrorCode.ARGS_ERROR
 
