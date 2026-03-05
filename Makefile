@@ -17,7 +17,7 @@ MYPYCACHES := $(addsuffix /.mypy_cache,$(DIRS))
 # tools
 UV := uv
 FLAKE8 := $(UV) run flake8 --exclude=.venv,llm_sdk,__pycache__,.mypy_cache
-MYPY := $(UV) run mypy --exclude '(.*cache.*)' --follow-imports=skip
+MYPY := $(UV) run mypy --exclude '(.*cache.*)'
 
 # flags
 MYPY_FLAGS := \
@@ -41,11 +41,11 @@ debug: install
 	@$(UV) run python -m pdb -m src $(ARGS)
 
 lint: install
-	@$(FLAKE8) && $(FLAKE8_SUCCESS)
+	@$(FLAKE8) src && $(FLAKE8_SUCCESS)
 	@$(MYPY) src $(MYPY_FLAGS)
 
 lint-strict: install
-	@$(FLAKE8) && $(FLAKE8_SUCCESS)
+	@$(FLAKE8) src && $(FLAKE8_SUCCESS)
 	@$(MYPY) src --strict
 
 is_uv:
