@@ -6,7 +6,7 @@ from pydantic import (
 )
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from .errors import ParseError
 from .typing import JsonData
@@ -84,7 +84,7 @@ class JsonParsingHandler:
 
             for d in data:
                 if not isinstance(d, dict):
-                    raise ParseError("prompt json items must be dicts")
+                    raise ParseError("prompt json objects must be dicts")
                 try:
                     self.ValidatePrompts(**d)
                 except ValidationError as e:
@@ -96,24 +96,62 @@ class JsonParsingHandler:
         return [" ".join(d.values()) for d in data]
 
     class ValidateFn(BaseModel):
-        pass
+        class ValidateParam(BaseModel):
+            model_config = ConfigDict(extra="forbid", strict=True)
+            type: Literal["number", "string"]
+
+        class ValidateReturns(BaseModel):
+            model_config = ConfigDict(extra="forbid", strict=True)
+            type: Literal["number", "string"]
+
+        model_config = ConfigDict(extra="forbid", strict=True)
+
+        name: StrictStr = Field(..., min_length=1)
+        description: StrictStr = Field(..., min_length=1)
+
+        parameters: dict[StrictStr, ValidateParam]
+        returns: ValidateReturns
+
+        @field_validator("name", "description")
+        @classmethod
+        def not_blank_str(cls, value: str) -> str:
+            value = value.strip()
+            if not value:
+                raise ValueError("must be non-empty")
+            return value
+
+        @field_validator("parameters", mode="before")
+        @classmethod
+        def validate_parameters(cls, value: Any) -> Any:
+            if not isinstance(value, dict):
+                raise TypeError("parameters must be an object")
+            if len(value) == 0:
+                raise ValueError("parameters must not be empty")
+
+            for key, spec in value.items():
+                if not isinstance(key, str) or not key.strip():
+                    raise ValueError("parameter name must non-empty string")
+                if not isinstance(spec, dict):
+                    raise TypeError("each parameter spec must be an object")
+            return value
 
     def parse_fn_def(self, fns_path: Path) -> JsonData:
         try:
             with fns_path.open("r", encoding="utf-8") as f:
+                data: Any = json.load(f)
+
+            if not isinstance(data, list):
+                raise ParseError("functions json must be a list")
+
+            for d in data:
+                if not isinstance(d, dict):
+                    raise ParseError("function json objects must be dicts")
                 try:
-                    data: Any = json.load(f)
-                except json.JSONDecodeError as e:
+                    self.ValidateFn(**d)
+                except ValidationError as e:
                     raise ParseError(e) from e
 
-            try:
-                if not all(isinstance(x, dict) for x in data):
-                    raise ParseError("functions_definition.json is invalid")
-            except TypeError:
-                raise ParseError("functions_definition.json must be a list")
-
-            self.ValidateFn(data)
             return data
 
-        except OSError as e:
+        except (OSError, json.JSONDecodeError, AttributeError, TypeError) as e:
             raise ParseError(e) from e

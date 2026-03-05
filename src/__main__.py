@@ -61,14 +61,16 @@ def main() -> int:
     logger.debug(args)
 
     # parsing and prompt augentation
+    parser: JsonParsingHandler = JsonParsingHandler()
+
     try:
-        fn_data: JsonData = JsonParsingHandler.parse_fn_def(paths['fn_def'])
+        fn_data: JsonData = parser.parse_fn_def(paths['fn_def'])
     except ParseError as e:
         logger.error(e)
         return ErrorCode.PARSE_ERROR
 
     try:
-        prompts: list[str] = JsonParsingHandler.parse_prompts(paths['input'])
+        prompts: list[str] = parser.parse_prompts(paths['input'])
     except PromptError as e:
         logger.error(e)
         return ErrorCode.PROMPT_ERROR
