@@ -88,7 +88,7 @@ class JsonParsingHandler:
                 try:
                     self.ValidatePrompts(**d)
                 except ValidationError as e:
-                    raise ParseError(e)
+                    raise ParseError(e.errors()[0]["msg"])
 
         except (OSError, json.JSONDecodeError, AttributeError, TypeError) as e:
             raise ParseError(e)
@@ -149,9 +149,9 @@ class JsonParsingHandler:
                 try:
                     self.ValidateFn(**d)
                 except ValidationError as e:
-                    raise ParseError(e) from e
+                    raise ParseError(e.errors()[0]["msg"])
 
             return data
 
         except (OSError, json.JSONDecodeError, AttributeError, TypeError) as e:
-            raise ParseError(e) from e
+            raise ParseError(e)
