@@ -163,4 +163,4 @@ def get_answers(
             answer_ids.append(model.encode(",")[0].tolist()[0])
 
     answer_ids.append(model.encode("]")[0].tolist()[0])
-    return model.decode(answer_ids)
+    return str(model.decode(answer_ids))

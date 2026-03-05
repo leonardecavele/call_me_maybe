@@ -4,7 +4,7 @@ import logging
 import argparse
 
 from pathlib import Path
-from typing import Any
+from typing import Any, TextIO
 
 import colorlog
 
@@ -19,8 +19,8 @@ from .errors import (
 logger: logging.Logger = logging.getLogger(__name__)
 
 
-def set_up_handler() -> logging.StreamHandler:
-    handler: logging.StreamHandler = logging.StreamHandler()
+def set_up_handler() -> logging.StreamHandler[TextIO]:
+    handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
     handler.setFormatter(
         colorlog.ColoredFormatter(
             (
@@ -37,7 +37,7 @@ def set_up_handler() -> logging.StreamHandler:
     return handler
 
 
-def parse_args() -> dict[str, Path]:
+def parse_args() -> dict[str, Any]:
     parser: argparse.ArgumentParser = argparse.ArgumentParser()
 
     parser.add_argument(
