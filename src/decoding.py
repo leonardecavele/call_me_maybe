@@ -9,9 +9,6 @@ from llm_sdk import Small_LLM_Model
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-MAX_TOKENS: int = 256
-NEGATIVE_INF: float = -1e30
-
 
 class Step(IntEnum):
     FUNCTION_NAME = 0
@@ -63,11 +60,18 @@ def generate_parameters(
 
     for token_id in pattern:
         if token_id == TOOL_CALL:
+            first: bool = True
             next_str: str = ""
             while True:
                 logits: list[float] = model.get_logits_from_input_ids(
                     prompt_ids
                 )
+                if first:
+                    first = False
+                    for token_id in range(len(logits)):
+                        token_str: str = model.decode([token_id])
+                        if "}" in token_str or "\"" in token_str:
+                            logits[token_id] = float("-inf")
                 next_id: int = max(range(len(logits)), key=logits.__getitem__)
                 next_str = model.decode([next_id])
 
