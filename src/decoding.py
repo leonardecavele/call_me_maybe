@@ -8,6 +8,7 @@ from typing import Any
 from llm_sdk import Small_LLM_Model
 
 from .errors import DecodeError
+from .typing import JsonData
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -17,10 +18,10 @@ class Step(IntEnum):
     PARAMETERS = auto()
 
 
-def generate_function_name(
+def generate_fn_name(
     model: Small_LLM_Model, prompt_ids: list[int], fn_first_ids: list[int]
 ) -> list[int]:
-    function_name_ids: list[int] = []
+    fn_name_ids: list[int] = []
 
     logits: list[float] = model.get_logits_from_input_ids(prompt_ids)
     for token_id in range(len(logits)):
@@ -31,7 +32,7 @@ def generate_function_name(
     next_token: str = model.decode([next_id])
 
     while "\"" not in next_token:
-        function_name_ids.append(next_id)
+        fn_name_ids.append(next_id)
         prompt_ids.append(next_id)
         logger.debug("next_id=%d piece=%r", next_id, next_token)
 
@@ -39,29 +40,29 @@ def generate_function_name(
         next_id = max(range(len(logits)), key=logits.__getitem__)
         next_token = model.decode([next_id])
 
-    return function_name_ids
+    return fn_name_ids
 
 
 def generate_parameters(
     model: Small_LLM_Model, prompt_ids: list[int],
-    functions: list[dict[str, Any]], TOOL_CALL: int
+    fns: JsonData, TOOL_CALL: int
 ) -> list[int]:
     parameters_ids: list[int] = []
 
     try:
-        function_name: str = re.findall(
+        fn_name: str = re.findall(
             r'"name":"([^"]+)"', model.decode(prompt_ids)
         )[-1]
-        if not function_name:
+        if not fn_name:
             raise DecodeError("empty function name")
     except IndexError:
         raise DecodeError("could not extract function name")
 
     fn: dict[str, Any] = next(
-        (f for f in functions if f.get("name") == function_name), {}
+        (f for f in fns if f.get("name") == fn_name), {}
     )
     if not fn:
-        raise DecodeError(f"unknown function: {function_name}")
+        raise DecodeError(f"unknown function: {fn_name}")
 
     parameters: dict[str, dict[str, str]] = fn.get("parameters", {})
     if not parameters:
@@ -114,7 +115,7 @@ def generate_parameters(
 
 def get_answers(
     model: Small_LLM_Model, augmented_prompts: list[str], prompts: list[str],
-    functions: list[dict[str, Any]]
+    fns: JsonData
 ) -> str:
     answer_ids: list[int] = []
     answer_ids.append(model.encode("[")[0].tolist()[0])
@@ -125,9 +126,9 @@ def get_answers(
         model.encode(p)[0].tolist() for p in augmented_prompts
     ]
 
-    function_names: list[str] = [fn.get("name", "") for fn in functions]
+    fn_names: list[str] = [fn.get("name", "") for fn in fns]
     fn_first_ids: list[int] = [
-        model.encode(name)[0].tolist()[0] for name in function_names if name
+        model.encode(name)[0].tolist()[0] for name in fn_names if name
     ]
 
     for prompt_i, _ in enumerate(prompts_ids):
@@ -151,14 +152,14 @@ def get_answers(
                 new_ids: list[int] = []
                 if step == Step.FUNCTION_NAME:
                     logger.info("generating function name")
-                    new_ids += generate_function_name(
+                    new_ids += generate_fn_name(
                         model, prompts_ids[prompt_i], fn_first_ids
                     )
                     step += 1
                 elif step == Step.PARAMETERS:
                     logger.info("generating parameters")
                     new_ids += generate_parameters(
-                        model, prompts_ids[prompt_i], functions, TOOL_CALL
+                        model, prompts_ids[prompt_i], fns, TOOL_CALL
                     )
                     step += 1
                 answer_ids += new_ids

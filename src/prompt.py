@@ -1,10 +1,9 @@
-import json
 import logging
 
-from pathlib import Path
 from typing import Any
 
 from .errors import PromptError
+from .typing import JsonData
 
 logger: logging.Logger = logging.getLogger(__name__)
 
@@ -12,39 +11,21 @@ logger: logging.Logger = logging.getLogger(__name__)
 DIRECTIVE: str = "Pick the appropriate function:"
 
 
-def parse_prompts(input_path: Path) -> list[str]:
+def format_fn(fn_desc: dict[str, Any]) -> str:
+    return f"NAME: \"{fn_desc['name']}\"."
+
+
+def get_prompt_context(fns: JsonData) -> str:
     try:
-        with input_path.open("r", encoding="utf-8") as f:
-            try:
-                data: list[dict[str, str]] = json.load(f)
-            except (json.JSONDecodeError, AttributeError, TypeError) as e:
-                raise PromptError(e)
-    except OSError as e:
-        raise PromptError(e)
-
-    return [" ".join(d.values()) for d in data]
-
-
-def format_function(fn_desc: dict[str, Any]) -> str:
-    return (
-        f"NAME: \"{fn_desc['name']}\"."
-    )
-
-
-def get_prompt_context(functions: list[dict[str, Any]]) -> str:
-    try:
-        if not all(isinstance(fn, dict) for fn in functions):
+        if not all(isinstance(fn, dict) for fn in fns):
             raise PromptError("Expected list[dict] for function definitions")
-        return "\n".join(format_function(fn) for fn in functions)
+        return "\n".join(format_fn(fn) for fn in fns)
     except Exception as e:
         raise PromptError(e)
 
 
-def augment_prompts(
-    prompts: list[str],
-    functions: list[dict[str, Any]]
-) -> list[str]:
-    context: str = get_prompt_context(functions)
+def augment_prompts(prompts: list[str], fns: JsonData) -> list[str]:
+    context: str = get_prompt_context(fns)
     augmented_prompts: list[str] = []
     for p in prompts:
         augmented_prompt: str = "\n".join([DIRECTIVE, context, f"User: {p}"])
