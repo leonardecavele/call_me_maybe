@@ -52,7 +52,7 @@ def parse_args() -> dict[str, Path]:
     )
     parser.add_argument(
         "--output",
-        default="data/output/function_calls.json",
+        default="data/output/function_calling_results.json",
         help="path to the output JSON file"
     )
     parser.add_argument(

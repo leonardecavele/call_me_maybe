@@ -43,10 +43,13 @@ def generate_parameters(
 ) -> list[int]:
     parameters_ids: list[int] = []
 
-    function_name: str = re.findall(
-        r'"name":"([^"]+)"', model.decode(prompt_ids)
-    )[-1]
-    if not function_name:
+    try:
+        function_name: str = re.findall(
+            r'"name":"([^"]+)"', model.decode(prompt_ids)
+        )[-1]
+        if not function_name:
+            raise DecodeError("empty function name")
+    except IndexError:
         raise DecodeError("could not extract function name")
 
     fn: dict[str, Any] = next(

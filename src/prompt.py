@@ -17,7 +17,7 @@ def parse_prompts(input_path: Path) -> list[str]:
         with input_path.open("r", encoding="utf-8") as f:
             try:
                 data: list[dict[str, str]] = json.load(f)
-            except json.JSONDecodeError as e:
+            except (json.JSONDecodeError, AttributeError, TypeError) as e:
                 raise PromptError(e)
     except OSError as e:
         raise PromptError(e)
