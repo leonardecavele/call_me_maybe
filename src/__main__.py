@@ -40,7 +40,8 @@ def main() -> int:
     # parse and handle arguments
     try:
         args: dict[str, Any] = parse_args()
-    except OSError:
+    except OSError as e:
+        print(e, file=sys.stderr)
         return ErrorCode.ARGS_ERROR
     except SystemExit as e:
         if e.code == 0 or e.code is None:
