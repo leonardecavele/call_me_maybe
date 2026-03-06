@@ -90,7 +90,7 @@ Since the output format is highly deterministic, the technique I chose to use is
 string that includes the '<tool_call>' token. Thus, I simply have to follow the pattern and insert 
 its tokens in AI's answer, and start generating only when I stumble on the '<tool_call>' token. 
 
-These techniques allow my program to process each prompt in about 9 seconds while maintaining a good
+These techniques allow my program to process each prompt in about 2.5 seconds while maintaining a good
 success rate. To verify this, I benchmarked the program with various inputs and checked the accuracy
 of the results. However, performance may vary depending on the computing power of the machine used.
 
