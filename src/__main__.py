@@ -19,6 +19,16 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 def set_up_handler() -> "logging.StreamHandler[TextIO]":
+    """
+    Create and configure the default stream handler.
+
+    Set up a colored stream handler for console logging.
+
+    Returns
+    -------
+    "logging.StreamHandler[TextIO]"
+        A stream handler with a colored log formatter.
+    """
     handler: logging.StreamHandler[TextIO] = logging.StreamHandler()
     handler.setFormatter(
         colorlog.ColoredFormatter(
@@ -37,6 +47,16 @@ def set_up_handler() -> "logging.StreamHandler[TextIO]":
 
 
 def main() -> int:
+    """
+    Run the function-calling pipeline from CLI input.
+
+    Parse files, query the model, and export the resulting JSON.
+
+    Returns
+    -------
+    int
+        An error code indicating whether execution succeeded.
+    """
     # parse and handle arguments
     try:
         args: dict[str, Any] = parse_args()

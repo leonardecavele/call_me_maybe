@@ -13,6 +13,16 @@ logger: logging.Logger = logging.getLogger(__name__)
 
 
 class Step(IntEnum):
+    """
+    Generation steps for constrained decoding.
+
+    Attributes
+    ----------
+    FUNCTION_NAME : int
+        Step that generates the function name.
+    PARAMETERS : int
+        Step that generates the function parameters.
+    """
     FUNCTION_NAME = 0
     PARAMETERS = auto()
 
@@ -20,6 +30,25 @@ class Step(IntEnum):
 def generate_fn_name(
     model: Small_LLM_Model, ids: list[int], fn_first_ids: list[int]
 ) -> list[int]:
+    """
+    Generate a function name token by token.
+
+    Restrict the first token to known functions, then decode greedily.
+
+    Parameters
+    ----------
+    model
+        The language model used for decoding.
+    ids
+        The current token ids for the prompt and partial output.
+    fn_first_ids
+        Token ids that can start a valid function name.
+
+    Returns
+    -------
+    list[int]
+        The token ids of the generated function name.
+    """
     fn_name_ids: list[int] = []
 
     logits: list[float] = model.get_logits_from_input_ids(ids)
@@ -46,6 +75,34 @@ def generate_parameters(
     model: Small_LLM_Model, ids: list[int], fn_name_ids: list[int],
     fns: JsonData, TOOL_CALL: int
 ) -> list[int]:
+    """
+    Generate parameter values for the selected function.
+
+    Follow the parameter pattern and greedily decode each value.
+
+    Parameters
+    ----------
+    model
+        The language model used for decoding.
+    ids
+        The current token ids for the prompt and partial output.
+    fn_name_ids
+        The token ids of the selected function name.
+    fns
+        The validated function definitions.
+    TOOL_CALL
+        The placeholder token id used during pattern generation.
+
+    Returns
+    -------
+    list[int]
+        The token ids of the generated parameters.
+
+    Raises
+    ------
+    DecodeError:
+        Raised when the generated function name is unknown.
+    """
     parameters_ids: list[int] = []
 
     fn_name_str: str = model.decode(fn_name_ids)
@@ -102,6 +159,27 @@ def get_answers(
     model: Small_LLM_Model, augmented_prompts: list[str], prompts: list[str],
     fns: JsonData
 ) -> str:
+    """
+    Generate JSON answers for all prompts.
+
+    Build one function call per prompt with constrained greedy decoding.
+
+    Parameters
+    ----------
+    model
+        The language model used for decoding.
+    augmented_prompts
+        Prompts augmented with the function list context.
+    prompts
+        Original user prompts to include in the output JSON.
+    fns
+        The validated function definitions.
+
+    Returns
+    -------
+    str
+        A JSON string containing all generated answers.
+    """
     answer_ids: list[int] = []
     answer_ids.append(model.encode("[")[0].tolist()[0])
 
