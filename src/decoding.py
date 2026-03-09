@@ -116,9 +116,9 @@ def generate_parameters(
 
     pattern: list[int] = model.encode(",".join(
         (
-            f"\"{k}\":<tool_call>"
-            if parameters[k].get("type") == "number"
-            else f"\"{k}\":\"<tool_call>\""
+            f"\"{k}\":\"<tool_call>\""
+            if parameters[k].get("type") != "string"
+            else f"\"{k}\":<tool_call>"
         )
         for k in parameters.keys()
     ))[0].tolist()
