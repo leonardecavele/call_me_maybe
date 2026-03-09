@@ -209,7 +209,7 @@ class JsonParsingHandler:
                 The declared parameter type.
             """
             model_config = ConfigDict(extra="forbid", strict=True)
-            type: Literal["number", "string", "float", "boolean"]
+            type: str = Field(min_length=1)
 
         class ValidateReturns(BaseModel):
             """
@@ -223,7 +223,7 @@ class JsonParsingHandler:
                 The declared return type.
             """
             model_config = ConfigDict(extra="forbid", strict=True)
-            type: Literal["number", "string", "float", "boolean"]
+            type: str = Field(min_length=1)
 
         model_config = ConfigDict(extra="forbid", strict=True)
 

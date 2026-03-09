@@ -102,3 +102,7 @@ The links below helped me understand constrained decoding. AI helped with debugg
 [Nvidia: Constrained Decoding](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/tutorials/Feature_Guide/Constrained_Decoding/README.html)  
 [Michael Breendoerfer: Constrained Decoding](https://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-outputhttps://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-outputhttps://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-outputhttps://mbrenndoerfer.com/writing/constrained-decoding-structured-llm-output)  
 [Chatgpt](https://chatgpt.com)  
+
+### TODO
+
+- Bracket matching stack for parameters
