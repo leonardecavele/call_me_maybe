@@ -1,0 +1,53 @@
+[
+  {
+    "name": "fn_multiply_numbers",
+    "description": "Multiply two numbers together and return the result.",
+    "parameters": {
+      "a": {
+        "type": "number"
+      },
+      "b": {
+        "type": "number"
+      }
+    },
+    "returns": {
+      "type": "number"
+    }
+  },
+  {
+    "name": "fn_convert_to_uppercase",
+    "description": "Convert a string to uppercase.",
+    "parameters": {
+      "s": {
+        "type": "string"
+      }
+    },
+    "returns": {
+      "type": "string"
+    }
+  },
+  {
+    "name": "fn_count_words",
+    "description": "Count the number of words in a string.",
+    "parameters": {
+      "text": {
+        "type": "string"
+      }
+    },
+    "returns": {
+      "type": "number"
+    }
+  },
+  {
+    "name": "fn_get_string_length",
+    "description": "Return the number of characters in a string.",
+    "parameters": {
+      "s": {
+        "type": "string"
+      }
+    },
+    "returns": {
+      "type": "number"
+    }
+  }
+]

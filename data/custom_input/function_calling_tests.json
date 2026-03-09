@@ -1,0 +1,23 @@
+[
+  {
+    "prompt": "What is the product of 7 and 8?"
+  },
+  {
+    "prompt": "Multiply 12 by 11"
+  },
+  {
+    "prompt": "Convert 'hello world' to uppercase"
+  },
+  {
+    "prompt": "Turn 'chatgpt est pratique' into uppercase"
+  },
+  {
+    "prompt": "Count the words in 'Learning to code takes time'"
+  },
+  {
+    "prompt": "How many words are in 'Bonjour tout le monde'"
+  },
+  {
+    "prompt": "What is the length of 'dragon'?"
+  }
+]
